@@ -348,6 +348,104 @@ Mesh::decimateQuadricEdgeCollapse(long target_num_faces)
   }
 }
 
+class kmeansGroup{
+public:
+  std::vector<Mesh::VertexIterator> vertexIncluded;
+  Vector3 center;
+  kmeansGroup(){}
+  kmeansGroup(Vector3 position){
+    center = position;
+  }
+  Real distance(Vector3 const & position){
+    return (center-position).length();
+  }
+  bool refreshCenter(){
+    Vector3 newCenter;
+    if (vertexIncluded.size() <= 0)
+    {
+      return false;
+    }
+    for (int i = 0; i < vertexIncluded.size(); ++i)
+    {
+      newCenter += vertexIncluded[i]->getPosition();
+    }
+    if (center!=newCenter)
+    {
+      center = newCenter;
+      return true;
+    }
+    return false;
+  }
+};
+
+void Mesh::kMeansVertexRemove(long k,long target_num_faces){
+  kmeansGroup vertexCluster[k];
+  int a = cbrt(k),b = cbrt(k), c = k/(a*b); 
+  int cluster_index = 0;
+  Vector3 low = bounds.getLow();
+  Vector3 high = bounds.getHigh();
+  Vector3 diff = high-low;
+  diff.x() = diff.x()/a;
+  diff.y() = diff.y()/b;
+  diff.z() = diff.z()/c;
+  for (int i = 0; i < a; ++i)
+  {
+    for (int j = 0; j < b; ++j)
+    {
+      for (int k = 0; k < c; ++k)
+      {
+        // DGP_CONSOLE<<low.x()+diff.x()*(i+0.5)<<" "<<low.y()+diff.y()*(j+0.5)<<" "<<low.z()+diff.z()*(k + 0.5)<< std::endl;
+        vertexCluster[cluster_index].center = Vector3(low.x()+diff.x()*(i+0.5),low.y()+diff.y()*(j+0.5),low.z()+diff.z()*(k + 0.5));
+      }
+    }
+  }
+  bool change = true;
+  while(change){
+    for (int i = 0; i < k; ++i)
+    {
+      vertexCluster[i].vertexIncluded.clear();
+    }
+    for (VertexIterator vi = vertices.begin(); vi != vertices.end(); ++vi)
+    {
+      Real minDist = 10000000000000000;
+      int index = -1;
+      for (int i = 0; i < k; ++i)
+      {
+        // DGP_CONSOLE<<vertexCluster[i].distance(vi->getPosition());
+        if(vertexCluster[i].distance(vi->getPosition())<minDist){
+
+          minDist = vertexCluster[i].distance(vi->getPosition());
+          index = i;
+        }
+      }
+      if (index!= -1)
+      {
+        // printf("no cluster found\n");
+      }
+      else{
+        vertexCluster[index].vertexIncluded.push_back(vi);
+      }
+    }
+    change = false;
+    for (int i = 0; i < k; ++i)
+    {
+      if (vertexCluster[i].refreshCenter())
+      {
+        change = true;
+      }
+    }
+  }
+  int maxCount = 0,index = -1;
+  for (int i = 0; i < k; ++i)
+  {
+    if(vertexCluster[i].vertexIncluded.size()>maxCount){
+      maxCount = vertexCluster[i].vertexIncluded.size();
+      index = i;
+    }
+  }
+  printf("%d\n",maxCount );
+}
+
 void
 Mesh::draw(Graphics::RenderSystem & render_system, bool draw_edges, bool use_vertex_data, bool send_colors) const
 {

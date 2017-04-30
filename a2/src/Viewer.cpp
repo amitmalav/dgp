@@ -291,7 +291,8 @@ Viewer::keyPress(unsigned char key, int x, int y)
   }
   else if (key == 'd' || key == 'd')
   {
-    highlighted_vertex = mesh->decimateQuadricEdgeCollapse();
+    mesh->kMeansVertexRemove(500,200);
+    //highlighted_vertex = mesh->decimateQuadricEdgeCollapse();
     glutPostRedisplay();
   }
 }

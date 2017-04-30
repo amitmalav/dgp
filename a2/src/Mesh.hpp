@@ -247,6 +247,9 @@ class Mesh : public virtual NamedObject, private Noncopyable
      */
     void decimateQuadricEdgeCollapse(long target_num_faces);
 
+    void kMeansVertexRemove(long k,long target_num_faces);
+
+
     /** Draw the mesh on a render_system. */
     void draw(Graphics::RenderSystem & render_system, bool draw_edges = false, bool use_vertex_data = false,
               bool send_colors = false) const;

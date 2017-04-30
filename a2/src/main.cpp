@@ -39,7 +39,8 @@ main(int argc, char * argv[])
 
   if (target_num_faces >= 0 && mesh.numFaces() > target_num_faces)
   {
-    mesh.decimateQuadricEdgeCollapse(target_num_faces);
+    //mesh.decimateQuadricEdgeCollapse(target_num_faces);
+    mesh.kMeansVertexRemove(500,target_num_faces);
     mesh.updateBounds();
   }
 
